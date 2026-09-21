@@ -1,25 +1,65 @@
--- Toolboxhub Loader with Auto-Tracking
+-- Toolboxhub Loader with Script Ban Check & Auto-Tracking
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+local LocalPlayer = Players.LocalPlayer or Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
 
-task.spawn(function()
-    pcall(function()
-        request({
-            Url = "https://toolboxhub-ok.up.railway.app/track_execution",
-            Method = "POST",
-            Headers = {
-                ["Content-Type"] = "application/json"
-            },
-            Body = HttpService:JSONEncode({
-                roblox_id = tostring(LocalPlayer.UserId),
-                roblox_username = LocalPlayer.Name
-            })
-        })
-    end)
+local SERVER_URL = "https://toolboxhub-ok.up.railway.app"
+
+-- ==========================================
+-- 1. SCRIPT BAN CHECK
+-- ==========================================
+local isBanned = false
+local banReason = "No reason provided."
+
+local checkSuccess, response = pcall(function()
+    return game:HttpGet(SERVER_URL .. "/check_ban?roblox_id=" .. tostring(LocalPlayer.UserId), true)
 end)
 
+if checkSuccess and response then
+    local decodeSuccess, data = pcall(function()
+        return HttpService:JSONDecode(response)
+    end)
+
+    if decodeSuccess and data and data.banned == true then
+        isBanned = true
+        if data.reason and data.reason ~= "" then
+            banReason = data.reason
+        end
+    end
+end
+
+if isBanned then
+    LocalPlayer:Kick("\nSorry you’ve been banned from toolbox hub😢\n\nReason: " .. banReason)
+    error("[Toolboxhub] Execution aborted: User is script-banned.")
+    return
+end
+
+-- ==========================================
+-- 2. BACKGROUND EXECUTION TRACKING
+-- ==========================================
+task.spawn(function()
+    local httpRequest = (syn and syn.request) or http_request or request or (http and http.request)
+    if httpRequest then
+        pcall(function()
+            httpRequest({
+                Url = SERVER_URL .. "/track_execution",
+                Method = "POST",
+                Headers = {
+                    ["Content-Type"] = "application/json"
+                },
+                Body = HttpService:JSONEncode({
+                    roblox_id = tostring(LocalPlayer.UserId),
+                    roblox_username = LocalPlayer.Name
+                })
+            })
+        end)
+    end
+end)
+
+-- ==========================================
+-- 3. LOAD MAIN SCRIPT FROM GITHUB
+-- ==========================================
 local success, err = pcall(function()
     loadstring(game:HttpGet(
         "https://raw.githubusercontent.com/Abdullahking20/loader-lua/main/loader"
@@ -28,6 +68,6 @@ end)
 
 if not success then
     warn("Toolboxhub: Failed to load main script - " .. tostring(err))
+else
+    print("enjoy using toolbox hub!")
 end
-
-print("enjoy using toolbox hub!")
