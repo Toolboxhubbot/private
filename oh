@@ -1,0 +1,31 @@
+-- Toolboxhub Loader with Auto-Tracking
+
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+task.spawn(function()
+    pcall(function()
+        request({
+            Url = "https://toolboxhub-ok.up.railway.app/track_execution",
+            Method = "POST",
+            Headers = {
+                ["Content-Type"] = "application/json"
+            },
+            Body = HttpService:JSONEncode({
+                roblox_id = tostring(LocalPlayer.UserId),
+                roblox_username = LocalPlayer.Name
+            })
+        })
+    end)
+end)
+
+local success, err = pcall(function()
+    loadstring(game:HttpGet(
+        "https://raw.githubusercontent.com/Abdullahking20/loader-lua/main/loader"
+    ))()
+end)
+
+if not success then
+    warn("Toolboxhub: Failed to load main script - " .. tostring(err))
+end
