@@ -4,7 +4,8 @@ local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer or Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
 
-local SERVER_URL = "ohtoolboxhub.up.railway.app"
+local SERVER_URL = "https://ohtoolboxhub.up.railway.app"
+
 
 -- ==========================================
 -- 1. SCRIPT BAN CHECK
